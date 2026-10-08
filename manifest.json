@@ -1,15 +1,18 @@
 {
-    "name": "PWA Demo",
-    "key": "MIGfMA3GCSqGSIb3DFEBAQUAA4GNADCBiQKBgQDcBHwzDvyBQ6bDppkIs9MP4ksKqCMyXQ/A52JivIQLh4YO/9vJsT3oaZhSpUQK9RCocOEQvwsHsFReW2nUEc6OLLyoKJLxIb7KkLGsmfakkut/fFdNJYh0xOTbSN8YvLWcqph09XAY2Y/f0LV7vfO1cuCqtkMt8hFrBGWxRdf9HDJSKALU",
-    "start_url": "/index.html",
+    "name": "Solar System / 太阳系",
+    "short_name": "Solar System",
+    "description": "一个可交互的 3D 太阳系模型。",
+    "start_url": "./",
+    "scope": "./",
     "display": "standalone",
-    "icons": [{
-        "src": "./images/logo.png",
-        "sizes": "192x192",
-        "type": "image/png"
-    }, {
-        "src": "./images/demo.jpg",
-        "sizes": "192x192",
-        "type": "image/png"
-    }]
+    "background_color": "#030407",
+    "theme_color": "#030407",
+    "icons": [
+        {
+            "src": "images/solar-icon.svg",
+            "sizes": "any",
+            "type": "image/svg+xml",
+            "purpose": "any maskable"
+        }
+    ]
 }

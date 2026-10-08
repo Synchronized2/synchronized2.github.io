@@ -1,79 +1,52 @@
-var version = '1.0.2';
-var cacheName = 'pwa-' + version;
-var appShellFiles = [
-    './',
-    './index.html',
-    './sw.js',
-    './images/logo.png',
-    './images/demo.jpg',
-    './css/main.css',
-    './css/searchs.css',
-    './css/weather.css',
-    './js/image.js',
-    './js/jquery.js',
-    './js/search.js',
-    './js/weather.js',
+const CACHE_NAME = "solar-system-v14";
+const TEXTURE_CACHE = "solar-system-textures-v1";
+const APP_SHELL = [
+    "./",
+    "./index.html",
+    "./manifest.json",
+    "./images/solar-icon.svg",
+    "./css/main.css?v=14",
+    "./js/solar-system.js?v=14"
 ];
-self.addEventListener('install', function(e) {
-    // self.skipWaiting();
-    console.log('[Service Worker] Install');
-    e.waitUntil(
-        caches.open(cacheName).then(function(cache) {
-            console.log('[Service Worker] Caching all: app shell and content');
-            return cache.addAll(appShellFiles);
-        })
-        .then(() => self.skipWaiting())
-    );
+
+self.addEventListener("install", (event) => {
+    event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL)));
+    self.skipWaiting();
 });
 
-self.addEventListener('fetch', function(e) {
-    e.respondWith(
-        caches.match(e.request).then(function(r) {
-            console.log('[Service Worker] Fetching resource: ' + e.request.url);
-            return r || fetch(e.request).then(function(response) {
-                return caches.open(cacheName).then(function(cache) {
-                    console.log('[Service Worker] Caching new resource: ' + e.request.url);
-                    cache.put(e.request, response.clone());
-                    return response;
-                });
-            });
-        })
-    );
-});
-
-// self.addEventListener('fetch', event => {
-//     if (event.request && event.request.method !== 'GET') {
-//         return
-//     }
-//     event.respondWith(
-//         caches.open(cacheName)
-//         .then(cache => {
-//             return cache.match(event.request)
-//                 .then(response => {
-//                     if (response) {
-//                         console.log('cache fetch: ' + event.request.url) //打印请求地址信息
-//                         return response
-//                     }
-//                     return fetch(event.request) //fetch
-//                         .then(req => {
-//                             if (req.ok) cache.put(event.request, req.clone());
-//                             return req
-//                         })
-//                         .catch() //离线(offline)
-//                 })
-//         })
-//     )
-// })
-
-self.addEventListener('activate', event => {
-    console.log('activate' + event)
+self.addEventListener("activate", (event) => {
     event.waitUntil(
         caches.keys()
-        .then(keylist => {
-            return Promise.all(
-                keylist
-                .filter(key => key !== cacheName)
-                .map(key => caches.delete(key)) //删除旧的缓存
-            )
-        }).then(() => self.clients.claim()))
-})
+            .then((keys) => Promise.all(keys.filter((key) => key !== CACHE_NAME && key !== TEXTURE_CACHE).map((key) => caches.delete(key))))
+            .then(() => self.clients.claim())
+    );
+});
+
+self.addEventListener("fetch", (event) => {
+    if (event.request.method !== "GET") return;
+    const requestUrl = new URL(event.request.url);
+    const isTexture = requestUrl.origin === self.location.origin && requestUrl.pathname.includes("/images/textures/");
+    if (isTexture) {
+        event.respondWith(
+            caches.open(TEXTURE_CACHE).then((cache) => cache.match(event.request).then((cached) => {
+                if (cached) return cached;
+                return fetch(event.request).then((response) => {
+                    if (response.ok) cache.put(event.request, response.clone());
+                    return response;
+                });
+            }))
+        );
+        return;
+    }
+    event.respondWith(
+        fetch(event.request)
+            .then((response) => {
+                if (response.ok && requestUrl.origin === self.location.origin) {
+                    const copy = response.clone();
+                    caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
+                }
+                return response;
+            })
+            .catch(() => caches.match(event.request))
+    );
+});
